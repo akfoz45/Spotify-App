@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify Profilim</title>
 
-    <!-- DOĞRU CDN'LER -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         .filter-container {
@@ -89,6 +90,7 @@
             border-radius: 18px;
             backdrop-filter: blur(10px);
             transition: 0.3s ease-in-out;
+            height: 100%;
         }
         .card-spotify:hover {
             background: var(--card-bg-hover);
@@ -99,11 +101,12 @@
             font-size: 1.3rem;
             font-weight: 700;
             padding: 1.1rem 1.4rem;
+            color: white; 
         }
         .card-header-spotify i {
             margin-right: 8px;
             font-size: 1.4rem;
-            color: var(--spotify-green);
+            color: var(--spotify-green); 
         }
 
         .list-group-item-spotify {
@@ -114,6 +117,7 @@
             padding: 0.8rem 1.2rem;
             transition: 0.2s;
             color: white;
+            min-height: 75px;
         }
         .list-group-item-spotify:hover {
             background: rgba(255, 255, 255, 0.06);
@@ -193,7 +197,7 @@
                 </a>
             </div>
         </div>
-
+        
         <div class="row g-4">
 
             <div class="col-lg-6">
@@ -258,9 +262,65 @@
                 </div>
             </div>
 
+        </div> <div class="row mb-5 justify-content-center mt-5">
+            <div class="col-md-8 col-lg-6">
+                <div class="card card-spotify shadow-lg p-3">
+                    <div class="card-header card-header-spotify text-center border-0">
+                        <i class="bi bi-pie-chart-fill"></i> Müzik Zevkinin Analizi
+                    </div>
+                    <div class="card-body" style="height: 300px; position: relative;">
+                        <canvas id="genreChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+        </div> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {{ chart_labels|json_script:"genreLabelsData" }}
+    {{ chart_data|json_script:"genreCountsData" }}
+
+    <script>
+        const ctx = document.getElementById('genreChart').getContext('2d');
+        
+        const labels = JSON.parse(document.getElementById('genreLabelsData').textContent);
+        const data = JSON.parse(document.getElementById('genreCountsData').textContent);
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Dinlenme Sayısı',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(29, 185, 84, 0.8)',
+                        'rgba(255, 255, 255, 0.8)',
+                        'rgba(29, 185, 84, 0.4)',
+                        'rgba(255, 255, 255, 0.4)',
+                        'rgba(100, 100, 100, 0.6)'
+                    ],
+                    borderColor: '#121212',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'white',
+                            font: {
+                                family: "'Montserrat', sans-serif",
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

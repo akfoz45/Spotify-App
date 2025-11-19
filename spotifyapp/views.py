@@ -9,10 +9,11 @@ from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from .models import SpotifyProfile, Artist, Track
 from django.utils import timezone
 from datetime import timedelta
+from collections import Counter
 
-
-def login_view(request):
-    sp_oauth = SpotifyOAuth(
+def get_spotify_oauth(request):
+    """SpotifyOAuth nesnesini oluşturmak için yardımcı fonksiyon."""
+    return SpotifyOAuth(
         client_id=settings.SPOTIPY_CLIENT_ID,
         client_secret=settings.SPOTIPY_CLIENT_SECRET,
         redirect_uri=request.build_absolute_uri(reverse('spotify_callback')),
@@ -20,6 +21,10 @@ def login_view(request):
         show_dialog=True,
         cache_path=None
     )
+
+
+def login_view(request):
+    sp_oauth = get_spotify_oauth(request) 
 
     state = str(uuid.uuid4())
     request.session['spotify_auth_state'] = state
@@ -39,14 +44,7 @@ def callback_view(request):
     
     received_code = request.GET.get('code')
 
-    sp_oauth = SpotifyOAuth(
-        client_id=settings.SPOTIPY_CLIENT_ID,
-        client_secret=settings.SPOTIPY_CLIENT_SECRET,
-        redirect_uri=request.build_absolute_uri(reverse('spotify_callback')),
-        scope="user-top-read user-read-recently-played",
-        show_dialog=True,
-        cache_path=None
-    )
+    sp_oauth = get_spotify_oauth(request) 
 
     try:
         if 'spotify_auth_state' in request.session:
@@ -67,11 +65,24 @@ def profile_view(request):
     if not token_info:
         return redirect('spotify_login')
     
+    sp_oauth = get_spotify_oauth(request) 
+    
+    if sp_oauth.is_token_expired(token_info):
+        try:
+            new_token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+            
+            request.session['spotify_token_info'] = new_token_info
+            token_info = new_token_info 
+            
+        except SpotifyException:
+            request.session.pop('spotify_token_info', None)
+            return redirect('spotify_login')
+
     try:
+        # Artık token ya geçerli, ya da yeni yenilendi
         sp = spotipy.Spotify(auth=token_info['access_token'])
 
         selected_range = request.GET.get('time_range', 'long_term') 
-
         if selected_range not in ['short_term', 'medium_term', 'long_term']:
             selected_range = 'long_term'
     
@@ -94,14 +105,19 @@ def profile_view(request):
             for artist_data in top_artists_data['items']:
                 
                 artist_image_url = artist_data['images'][0]['url'] if  artist_data['images'] else None
+                artist_genres = artist_data.get('genres', [])
                 
                 artist, _ = Artist.objects.get_or_create(
                     spotify_id = artist_data['id'],
-                    defaults={'name': artist_data['name'], 'image_url': artist_image_url}
+                    defaults={
+                        'name': artist_data['name'], 
+                        'image_url': artist_image_url,
+                        'genres': artist_genres
+                        }
                 )
                 profile.top_artists.add(artist)
 
-            top_tracks_data = sp.current_user_top_tracks(limit=10, time_range="long_term")
+            top_tracks_data = sp.current_user_top_tracks(limit=10, time_range=selected_range) 
             profile.top_tracks.clear()
             for track_data in top_tracks_data['items']:
                 album_art = track_data['album']['images'][0]['url'] if track_data['album']['images'] else None
@@ -128,8 +144,17 @@ def profile_view(request):
 
         top_tracks = profile.top_tracks.all()
         top_artists = profile.top_artists.all()
-
         recent_tracks = sp.current_user_recently_played(limit=10)
+
+        all_genres = []
+        for artist in top_artists:
+            if artist.genres:
+                all_genres.extend(artist.genres)
+
+        most_common_genres =  Counter(all_genres).most_common(5)
+
+        chart_labels = [g[0].title() for g in most_common_genres]
+        chart_data = [g[1] for g in most_common_genres] 
     
     except SpotifyException as e:
         request.session.pop('spotify_token_info', None)
@@ -141,15 +166,13 @@ def profile_view(request):
         'recent_tracks': recent_tracks['items'], 
         'profile': profile,
         'selected_range': selected_range,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
     }
 
     return render(request, 'spotifyapp/profile.html', context)
 
 
 def logout_view(request):
-    #if 'spotify_token_info' in request.session:
-        #del request.session['spotify_token_info']
-
     request.session.flush()
-
     return redirect('spotify_login')

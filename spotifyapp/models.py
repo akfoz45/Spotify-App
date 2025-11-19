@@ -4,6 +4,7 @@ class Artist(models.Model):
     name = models.CharField(max_length=200)
     spotify_id = models.CharField(max_length=100, unique=True, primary_key=True)
     image_url = models.URLField(max_length=500, null=True, blank=True)
+    genres = models.JSONField(default=list, blank=True)
     
     def __str__(self):
         return self.name
