@@ -3,7 +3,9 @@
 ## 🌐 Live Demo
 
 You can try the project live here: **[Spotify Profile Analyzer](https://akf.pythonanywhere.com)**
-
+[![Spotify Profile Analyzer](https://img.shields.io/badge/Canlı_Demo-1DB954?style=for-the-badge&logo=spotify&logoColor=white)](https://akf.pythonanywhere.com)
+[![Visit Site](https://img.shields.io/badge/Web_Sitesi-000000?style=for-the-badge&logo=google-chrome&logoColor=white)](https://akf.pythonanywhere.com)
+[![Open in Browser](https://img.shields.io/badge/Open_in_Browser-4285F4?style=flat-square&logo=google-chrome&logoColor=white)](https://akf.pythonanywhere.com)
 ---
 
 This project is a Django web application that allows users to log in with their Spotify accounts to analyze and visualize their listening habits. It presents the user's top tracks, artists, and music genres in a stylish interface.
