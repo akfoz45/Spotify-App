@@ -107,7 +107,7 @@ def profile_view(request):
                 artist_image_url = artist_data['images'][0]['url'] if  artist_data['images'] else None
                 artist_genres = artist_data.get('genres', [])
                 
-                artist, _ = Artist.objects.get_or_create(
+                artist, _ = Artist.objects.update_or_create(
                     spotify_id = artist_data['id'],
                     defaults={
                         'name': artist_data['name'], 
