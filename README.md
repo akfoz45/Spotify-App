@@ -3,7 +3,7 @@
 ## 🌐 Live Demo
 You can try the project live by clicking the button below:
 
-[![Spotify Profile Analyzer](https://img.shields.io/badge/Canlı_Demo-1DB954?style=for-the-badge&logo=spotify&logoColor=white)](https://akf.pythonanywhere.com)
+[![Spotify Profile Analyzer](https://img.shields.io/badge/Live_Demo-1DB954?style=for-the-badge&logo=spotify&logoColor=white)](https://akf.pythonanywhere.com)
 
 
 ---
